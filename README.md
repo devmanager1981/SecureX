@@ -1,4 +1,4 @@
-# Tuya Security Digital Twin
+#SECUREX Tuya Security Digital Twin
 
 An AI-powered IoT security system that integrates Tuya smart home devices with real-time threat analysis and 3D visualization.
 
