@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuya Security Digital Twin</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        /* Full-screen 3D canvas container */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Connection status indicator */
+        #status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        #status-indicator:hover {
+            background: rgba(0, 0, 0, 0.95);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Connection status colors */
+        .connected {
+            color: #00ff00;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+            font-weight: 600;
+        }
+
+        .disconnected {
+            color: #ff4444;
+            text-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+            font-weight: 600;
+        }
+
+        /* Zone labels styling */
+        .zone-label {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 0.5px;
+        }
+
+        /* Title overlay (optional, for branding) */
+        #title-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #title-overlay h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        #title-overlay p {
+            font-size: 14px;
+            color: #cccccc;
+            margin: 4px 0 0 0;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Responsive design for tablets */
+        @media screen and (max-width: 1024px) {
+            #status-indicator {
+                top: 15px;
+                right: 15px;
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+
+            #title-overlay h1 {
+                font-size: 20px;
+            }
+
+            #title-overlay p {
+                font-size: 12px;
+            }
+
+            .zone-label {
+                font-size: 14px;
+                padding: 5px 10px;
+            }
+        }
+
+        /* Responsive design for mobile devices */
+        @media screen and (max-width: 768px) {
+            #status-indicator {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 12px;
+                border-radius: 6px;
+            }
+
+            #title-overlay {
+                top: 10px;
+                left: 10px;
+            }
+
+            #title-overlay h1 {
+                font-size: 18px;
+            }
+
+            #title-overlay p {
+                font-size: 11px;
+            }
+
+            .zone-label {
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+        }
+
+        /* Responsive design for small mobile devices */
+        @media screen and (max-width: 480px) {
+            #status-indicator {
+                top: 8px;
+                right: 8px;
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            #title-overlay h1 {
+                font-size: 16px;
+            }
+
+            #title-overlay p {
+                display: none; /* Hide subtitle on very small screens */
+            }
+
+            .zone-label {
+                font-size: 11px;
+                padding: 3px 6px;
+            }
+        }
+
+        /* Loading indicator (optional enhancement) */
+        .loading {
+            opacity: 0.6;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            #status-indicator {
+                border: 2px solid #ffffff;
+                background: rgba(0, 0, 0, 0.95);
+            }
+
+            .zone-label {
+                border: 1px solid #ffffff;
+                background: rgba(0, 0, 0, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="status-indicator">
+        Status: <span id="connection-status" class="disconnected">Disconnected</span>
+    </div>
+
+    <!-- Three.js CDN - Using older version for compatibility -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    
+    <!-- Application scripts will be added here -->
+    <script>
+        // Three.js Scene Setup
+        let scene, camera, renderer, labelRenderer;
+        let animationId;
+        let zoneMeshes = {}; // Store zone meshes for later access
+
+        // WebSocket Client Class
+        class WebSocketClient {
+            constructor(url) {
+                this.url = url;
+                this.ws = null;
+                this.reconnectInterval = 5000; // 5 seconds
+                this.reconnectTimer = null;
+                this.messageCallback = null;
+                this.isIntentionallyClosed = false;
+            }
+
+            connect() {
+                try {
+                    console.log(`Attempting to connect to ${this.url}`);
+                    this.ws = new WebSocket(this.url);
+
+                    this.ws.onopen = () => {
+                        console.log('WebSocket connected');
+                        this.updateConnectionStatus(true);
+                        
+                        // Clear any pending reconnection attempts
+                        if (this.reconnectTimer) {
+                            clearTimeout(this.reconnectTimer);
+                            this.reconnectTimer = null;
+                        }
+                    };
+
+                    this.ws.onmessage = (event) => {
+                        try {
+                            const message = JSON.parse(event.data);
+                            console.log('Received message:', message);
+                            
+                            // Call the message callback if set
+                            if (this.messageCallback && typeof this.messageCallback === 'function') {
+                                this.messageCallback(message);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing WebSocket message:', error);
+                        }
+                    };
+
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                    };
+
+                    this.ws.onclose = () => {
+                        console.log('WebSocket disconnected');
+                        this.updateConnectionStatus(false);
+                        
+                        // Attempt reconnection if not intentionally closed
+                        if (!this.isIntentionallyClosed) {
+                            this.reconnect();
+                        }
+                    };
+                } catch (error) {
+                    console.error('Error creating WebSocket connection:', error);
+                    this.updateConnectionStatus(false);
+                    this.reconnect();
+                }
+            }
+
+            reconnect() {
+                // Clear any existing reconnection timer
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                }
+
+                // Schedule reconnection after 5 seconds
+                console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds...`);
+                this.reconnectTimer = setTimeout(() => {
+                    this.connect();
+                }, this.reconnectInterval);
+            }
+
+            onMessage(callback) {
+                this.messageCallback = callback;
+            }
+
+            disconnect() {
+                this.isIntentionallyClosed = true;
+                
+                // Clear reconnection timer
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                    this.reconnectTimer = null;
+                }
+                
+                // Close WebSocket connection
+                if (this.ws) {
+                    this.ws.close();
+                    this.ws = null;
+                }
+            }
+
+            updateConnectionStatus(isConnected) {
+                const statusElement = document.getElementById('connection-status');
+                if (statusElement) {
+                    if (isConnected) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'connected';
+                    } else {
+                        statusElement.textContent = 'Disconnected';
+                        statusElement.className = 'disconnected';
+                    }
+                }
+            }
+        }
+
+        // Initialize WebSocket client
+        let wsClient = null;
+        let visualizationController = null;
+
+        // VisualizationController Class
+        class VisualizationController {
+            constructor(zoneMeshes) {
+                this.zoneMeshes = zoneMeshes;
+                this.flashInterval = null;
+                this.transitionAnimations = {};
+                this.isFlashing = false;
+            }
+
+            updateDigitalTwin(status, zone) {
+                console.log(`Updating digital twin: status=${status}, zone=${zone}`);
+                
+                // Clear any existing flash animation
+                this.clearFlashAnimation();
+
+                if (status === 'RED_CRITICAL') {
+                    // Flash all zones red at 2Hz
+                    this.flashAllZones(0xFF0000, 2);
+                } else if (status === 'YELLOW_WARNING') {
+                    // Set specific zone to yellow
+                    if (zone && this.zoneMeshes[zone]) {
+                        this.setZoneColor(zone, 0xFFFF00, true);
+                    }
+                } else if (status === 'GREEN_SAFE') {
+                    // Set all zones to blue-white
+                    const blueWhite = 0x87CEEB;
+                    Object.keys(this.zoneMeshes).forEach(zoneName => {
+                        this.setZoneColor(zoneName, blueWhite, true);
+                    });
+                }
+            }
+
+            setZoneColor(zoneName, color, animated = true) {
+                const mesh = this.zoneMeshes[zoneName];
+                if (!mesh) {
+                    console.warn(`Zone ${zoneName} not found`);
+                    return;
+                }
+
+                if (animated) {
+                    // Animate color transition over 1 second
+                    this.animateColorTransition(mesh, color, 1000);
+                } else {
+                    // Immediate color change
+                    mesh.material.color.setHex(color);
+                }
+            }
+
+            animateColorTransition(mesh, targetColor, duration) {
+                const startColor = mesh.material.color.clone();
+                const endColor = new THREE.Color(targetColor);
+                const startTime = Date.now();
+
+                // Cancel any existing animation for this mesh
+                const meshId = mesh.uuid;
+                if (this.transitionAnimations[meshId]) {
+                    clearInterval(this.transitionAnimations[meshId]);
+                }
+
+                // Create animation interval
+                const animationInterval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1.0);
+
+                    // Linear interpolation between start and end colors
+                    mesh.material.color.r = startColor.r + (endColor.r - startColor.r) * progress;
+                    mesh.material.color.g = startColor.g + (endColor.g - startColor.g) * progress;
+                    mesh.material.color.b = startColor.b + (endColor.b - startColor.b) * progress;
+
+                    // Stop animation when complete
+                    if (progress >= 1.0) {
+                        clearInterval(animationInterval);
+                        delete this.transitionAnimations[meshId];
+                    }
+                }, 16); // ~60fps
+
+                this.transitionAnimations[meshId] = animationInterval;
+            }
+
+            flashAllZones(color, frequencyHz) {
+                this.isFlashing = true;
+                const intervalMs = 1000 / (frequencyHz * 2); // Divide by 2 for on/off cycle
+                let isOn = true;
+
+                this.flashInterval = setInterval(() => {
+                    Object.keys(this.zoneMeshes).forEach(zoneName => {
+                        const mesh = this.zoneMeshes[zoneName];
+                        if (isOn) {
+                            mesh.material.color.setHex(color);
+                        } else {
+                            mesh.material.color.setHex(0xCCCCCC); // Default gray
+                        }
+                    });
+                    isOn = !isOn;
+                }, intervalMs);
+            }
+
+            clearFlashAnimation() {
+                if (this.flashInterval) {
+                    clearInterval(this.flashInterval);
+                    this.flashInterval = null;
+                    this.isFlashing = false;
+                }
+
+                // Clear all transition animations
+                Object.keys(this.transitionAnimations).forEach(meshId => {
+                    clearInterval(this.transitionAnimations[meshId]);
+                });
+                this.transitionAnimations = {};
+            }
+        }
+
+        function initScene() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Create orthographic camera for top-down view
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 30;
+            camera = new THREE.OrthographicCamera(
+                frustumSize * aspect / -2,  // left
+                frustumSize * aspect / 2,   // right
+                frustumSize / 2,            // top
+                frustumSize / -2,           // bottom
+                0.1,                        // near
+                1000                        // far
+            );
+            
+            // Position camera for top-down view
+            camera.position.set(0, 20, 0);
+            camera.lookAt(0, 0, 0);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // Attach renderer to DOM
+            const container = document.getElementById('canvas-container');
+            container.appendChild(renderer.domElement);
+
+            // Create CSS2D renderer for labels
+            labelRenderer = new THREE.CSS2DRenderer();
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.domElement.style.position = 'absolute';
+            labelRenderer.domElement.style.top = '0';
+            labelRenderer.domElement.style.pointerEvents = 'none';
+            container.appendChild(labelRenderer.domElement);
+
+            // Add ambient light for visibility
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // Add directional light for depth
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight.position.set(0, 10, 5);
+            scene.add(directionalLight);
+
+            // Create zone meshes
+            createZoneMeshes();
+
+            console.log('Three.js scene initialized');
+        }
+
+        function createZoneMeshes() {
+            // Define zone configurations based on design document
+            const zones = [
+                {
+                    name: 'Foyer',
+                    width: 5,
+                    height: 1,
+                    depth: 5,
+                    position: { x: 0, y: 0, z: 0 }
+                },
+                {
+                    name: 'LivingRoom',
+                    width: 10,
+                    height: 1,
+                    depth: 8,
+                    position: { x: 0, y: 0, z: -8 }
+                },
+                {
+                    name: 'MasterBedroom',
+                    width: 8,
+                    height: 1,
+                    depth: 8,
+                    position: { x: 0, y: 0, z: -18 }
+                }
+            ];
+
+            // Create mesh for each zone
+            zones.forEach(zone => {
+                // Create box geometry
+                const geometry = new THREE.BoxGeometry(zone.width, zone.height, zone.depth);
+                
+                // Create wireframe material with light gray color
+                const material = new THREE.MeshBasicMaterial({
+                    color: 0xCCCCCC,
+                    wireframe: true,
+                    wireframeLinewidth: 2
+                });
+
+                // Create mesh
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(zone.position.x, zone.position.y, zone.position.z);
+                
+                // Store mesh reference
+                zoneMeshes[zone.name] = mesh;
+                
+                // Add mesh to scene
+                scene.add(mesh);
+
+                // Create label
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'zone-label';
+                labelDiv.textContent = zone.name;
+                labelDiv.style.color = 'white';
+                labelDiv.style.fontSize = '16px';
+                labelDiv.style.fontWeight = 'bold';
+                labelDiv.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                labelDiv.style.padding = '5px';
+                labelDiv.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                labelDiv.style.borderRadius = '3px';
+
+                const label = new THREE.CSS2DObject(labelDiv);
+                label.position.set(0, 1, 0); // Position above the mesh
+                mesh.add(label);
+
+                console.log(`Created zone mesh: ${zone.name} at position (${zone.position.x}, ${zone.position.y}, ${zone.position.z})`);
+            });
+        }
+
+        function onWindowResize() {
+            // Update camera aspect ratio
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 30;
+            
+            camera.left = frustumSize * aspect / -2;
+            camera.right = frustumSize * aspect / 2;
+            camera.top = frustumSize / 2;
+            camera.bottom = frustumSize / -2;
+            
+            camera.updateProjectionMatrix();
+
+            // Update renderer size
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Update label renderer size
+            if (labelRenderer) {
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            
+            // Render labels
+            if (labelRenderer) {
+                labelRenderer.render(scene, camera);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initScene();
+            animate();
+            
+            // Initialize VisualizationController
+            visualizationController = new VisualizationController(zoneMeshes);
+            
+            // Initialize WebSocket client
+            wsClient = new WebSocketClient('ws://localhost:5000/ws');
+            wsClient.onMessage((message) => {
+                console.log('Processing status update:', message);
+                
+                // Wire to VisualizationController
+                if (visualizationController && message.status && message.zone) {
+                    visualizationController.updateDigitalTwin(message.status, message.zone);
+                }
+            });
+            wsClient.connect();
+            
+            console.log('Tuya Security Digital Twin - Frontend Initialized');
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            if (renderer) {
+                renderer.dispose();
+            }
+            if (wsClient) {
+                wsClient.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

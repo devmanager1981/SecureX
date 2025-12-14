@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuya Security Digital Twin - Working Version</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        #status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .connected {
+            color: #00ff00;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+        }
+
+        .disconnected {
+            color: #ff4444;
+            text-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+        }
+
+        .zone-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            z-index: 100;
+        }
+
+        .zone {
+            width: 300px;
+            height: 100px;
+            border: 3px solid #666;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(50, 50, 50, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .zone h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .zone.yellow {
+            background: rgba(255, 255, 0, 0.3);
+            border-color: #ffff00;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+        }
+
+        .zone.red {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            animation: flash 0.5s infinite;
+        }
+
+        .zone.green {
+            background: rgba(135, 206, 235, 0.3);
+            border-color: #87CEEB;
+            box-shadow: 0 0 20px rgba(135, 206, 235, 0.5);
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .title p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            color: #cccccc;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                radial-gradient(circle at 25% 25%, #00ff00 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #00ff00 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <div class="title">
+        <h1>🔒 SecureX Digital Twin</h1>
+        <p>AI-Powered Home Security System</p>
+    </div>
+
+    <div id="canvas-container">
+        <div class="zone-display">
+            <div id="zone-Foyer" class="zone">
+                <h3>🚪 Foyer</h3>
+            </div>
+            <div id="zone-LivingRoom" class="zone">
+                <h3>🛋️ Living Room</h3>
+            </div>
+            <div id="zone-MasterBedroom" class="zone">
+                <h3>🛏️ Master Bedroom</h3>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-indicator">
+        Status: <span id="connection-status" class="disconnected">Disconnected</span>
+    </div>
+
+    <script>
+        // WebSocket Client Class
+        class WebSocketClient {
+            constructor(url) {
+                this.url = url;
+                this.ws = null;
+                this.reconnectInterval = 5000;
+                this.reconnectTimer = null;
+                this.messageCallback = null;
+                this.isIntentionallyClosed = false;
+            }
+
+            connect() {
+                try {
+                    console.log(`Attempting to connect to ${this.url}`);
+                    this.ws = new WebSocket(this.url);
+
+                    this.ws.onopen = () => {
+                        console.log('WebSocket connected');
+                        this.updateConnectionStatus(true);
+                        
+                        if (this.reconnectTimer) {
+                            clearTimeout(this.reconnectTimer);
+                            this.reconnectTimer = null;
+                        }
+                    };
+
+                    this.ws.onmessage = (event) => {
+                        try {
+                            const message = JSON.parse(event.data);
+                            console.log('Received message:', message);
+                            
+                            if (this.messageCallback && typeof this.messageCallback === 'function') {
+                                this.messageCallback(message);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing WebSocket message:', error);
+                        }
+                    };
+
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                    };
+
+                    this.ws.onclose = () => {
+                        console.log('WebSocket disconnected');
+                        this.updateConnectionStatus(false);
+                        
+                        if (!this.isIntentionallyClosed) {
+                            this.reconnect();
+                        }
+                    };
+                } catch (error) {
+                    console.error('Error creating WebSocket connection:', error);
+                    this.updateConnectionStatus(false);
+                    this.reconnect();
+                }
+            }
+
+            reconnect() {
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                }
+
+                console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds...`);
+                this.reconnectTimer = setTimeout(() => {
+                    this.connect();
+                }, this.reconnectInterval);
+            }
+
+            onMessage(callback) {
+                this.messageCallback = callback;
+            }
+
+            disconnect() {
+                this.isIntentionallyClosed = true;
+                
+                if (this.reconnectTimer) {
+                    clearTimeout(this.reconnectTimer);
+                    this.reconnectTimer = null;
+                }
+                
+                if (this.ws) {
+                    this.ws.close();
+                    this.ws = null;
+                }
+            }
+
+            updateConnectionStatus(isConnected) {
+                const statusElement = document.getElementById('connection-status');
+                if (statusElement) {
+                    if (isConnected) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'connected';
+                    } else {
+                        statusElement.textContent = 'Disconnected';
+                        statusElement.className = 'disconnected';
+                    }
+                }
+            }
+        }
+
+        // Visualization Controller Class
+        class VisualizationController {
+            constructor() {
+                this.zones = ['Foyer', 'LivingRoom', 'MasterBedroom'];
+                this.flashInterval = null;
+                this.isFlashing = false;
+            }
+
+            updateDigitalTwin(status, zone) {
+                console.log(`Updating digital twin: status=${status}, zone=${zone}`);
+                
+                // Clear any existing flash animation
+                this.clearFlashAnimation();
+
+                if (status === 'RED_CRITICAL') {
+                    // Flash all zones red
+                    this.flashAllZones();
+                } else if (status === 'YELLOW_WARNING') {
+                    // Reset all zones first
+                    this.resetAllZones();
+                    // Set specific zone to yellow
+                    if (zone && zone !== 'HOUSE') {
+                        this.setZoneColor(zone, 'yellow');
+                    }
+                } else if (status === 'GREEN_SAFE') {
+                    // Set all zones to green/blue
+                    this.resetAllZones();
+                    this.zones.forEach(zoneName => {
+                        this.setZoneColor(zoneName, 'green');
+                    });
+                }
+            }
+
+            setZoneColor(zoneName, colorClass) {
+                const zoneElement = document.getElementById(`zone-${zoneName}`);
+                if (zoneElement) {
+                    // Remove all color classes
+                    zoneElement.classList.remove('yellow', 'red', 'green');
+                    // Add new color class
+                    if (colorClass) {
+                        zoneElement.classList.add(colorClass);
+                    }
+                }
+            }
+
+            resetAllZones() {
+                this.zones.forEach(zoneName => {
+                    const zoneElement = document.getElementById(`zone-${zoneName}`);
+                    if (zoneElement) {
+                        zoneElement.classList.remove('yellow', 'red', 'green');
+                    }
+                });
+            }
+
+            flashAllZones() {
+                this.isFlashing = true;
+                let isOn = true;
+
+                this.flashInterval = setInterval(() => {
+                    this.zones.forEach(zoneName => {
+                        const zoneElement = document.getElementById(`zone-${zoneName}`);
+                        if (zoneElement) {
+                            if (isOn) {
+                                zoneElement.classList.remove('yellow', 'green');
+                                zoneElement.classList.add('red');
+                            } else {
+                                zoneElement.classList.remove('red', 'yellow', 'green');
+                            }
+                        }
+                    });
+                    isOn = !isOn;
+                }, 250); // 2Hz flashing (250ms on/off)
+            }
+
+            clearFlashAnimation() {
+                if (this.flashInterval) {
+                    clearInterval(this.flashInterval);
+                    this.flashInterval = null;
+                    this.isFlashing = false;
+                }
+            }
+        }
+
+        // Initialize application
+        let wsClient = null;
+        let visualizationController = null;
+
+        function initializeApp() {
+            console.log('Initializing Tuya Security Digital Twin...');
+            
+            // Initialize visualization controller
+            visualizationController = new VisualizationController();
+            
+            // Initialize WebSocket client
+            wsClient = new WebSocketClient('ws://localhost:5000/ws');
+            wsClient.onMessage((message) => {
+                console.log('Processing status update:', message);
+                
+                // Handle different message types
+                if (message.status && message.zone) {
+                    visualizationController.updateDigitalTwin(message.status, message.zone);
+                } else if (message.status_update) {
+                    // Handle Flask-SocketIO format
+                    const data = message.status_update;
+                    if (data.status && data.zone) {
+                        visualizationController.updateDigitalTwin(data.status, data.zone);
+                    }
+                }
+            });
+            
+            // Connect to WebSocket
+            wsClient.connect();
+            
+            console.log('Tuya Security Digital Twin - Initialized Successfully');
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (wsClient) {
+                wsClient.disconnect();
+            }
+            if (visualizationController) {
+                visualizationController.clearFlashAnimation();
+            }
+        });
+
+        // Add some visual feedback for demo purposes
+        document.addEventListener('keydown', (event) => {
+            // Demo keyboard shortcuts (for testing)
+            switch(event.key) {
+                case '1':
+                    console.log('Demo: YELLOW_WARNING');
+                    if (visualizationController) {
+                        visualizationController.updateDigitalTwin('YELLOW_WARNING', 'LivingRoom');
+                    }
+                    break;
+                case '2':
+                    console.log('Demo: RED_CRITICAL');
+                    if (visualizationController) {
+                        visualizationController.updateDigitalTwin('RED_CRITICAL', 'HOUSE');
+                    }
+                    break;
+                case '3':
+                    console.log('Demo: GREEN_SAFE');
+                    if (visualizationController) {
+                        visualizationController.updateDigitalTwin('GREEN_SAFE', 'HOUSE');
+                    }
+                    break;
+                case 'r':
+                    console.log('Demo: Reset');
+                    if (visualizationController) {
+                        visualizationController.resetAllZones();
+                    }
+                    break;
+            }
+        });
+
+        console.log('Demo controls: Press 1 (Yellow), 2 (Red), 3 (Green), R (Reset)');
+    </script>
+</body>
+</html>

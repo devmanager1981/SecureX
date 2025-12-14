@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureX - AI Security Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .heartbeat {
+            width: 12px;
+            height: 12px;
+            background: #27ae60;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .connection-status {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .connected {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: #ffffff;
+            border: 2px solid #27ae60;
+            animation: glow-green 2s infinite;
+        }
+
+        .disconnected {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: #ffffff;
+            border: 2px solid #c0392b;
+            animation: glow-red 1s infinite;
+        }
+
+        @keyframes glow-green {
+            0%, 100% { box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3); }
+            50% { box-shadow: 0 4px 20px rgba(39, 174, 96, 0.6); }
+        }
+
+        @keyframes glow-red {
+            0%, 100% { box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
+            50% { box-shadow: 0 4px 20px rgba(231, 76, 60, 0.8); }
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            padding: 20px;
+            background: #ecf0f1;
+        }
+
+        .house-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid #bdc3c7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .house-title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* House Layout Grid */
+        .house-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 3px;
+            height: 400px;
+            border: 4px solid #34495e;
+            border-radius: 10px;
+            background: #34495e;
+            position: relative;
+        }
+
+        /* Room Styles */
+        .room {
+            background: #ffffff;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            transition: all 0.5s ease;
+            overflow: visible;
+            min-height: 120px;
+        }
+
+        .room-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .room-icon {
+            font-size: 32px;
+            margin: 10px 0;
+        }
+
+        .devices {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        /* Device Icons */
+        .device {
+            position: relative;
+            padding: 6px;
+            border-radius: 6px;
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 50px;
+            max-width: 60px;
+        }
+
+        .device:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .device-icon {
+            font-size: 18px;
+        }
+
+        .device-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .device-status {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .status-online { background: #27ae60; }
+        .status-offline { background: #e74c3c; }
+        .status-active { 
+            background: #f39c12; 
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Room States */
+        .room.normal {
+            background: #ffffff;
+            border-color: #bdc3c7;
+        }
+
+        .room.warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-color: #f39c12;
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .room.critical {
+            background: linear-gradient(135deg, #f8d7da 0%, #ff7675 100%);
+            border-color: #e74c3c;
+            box-shadow: 0 0 25px rgba(231, 76, 60, 0.5);
+            animation: flash-room 0.5s infinite;
+        }
+
+        .room.safe {
+            background: linear-gradient(135deg, #d1ecf1 0%, #74b9ff 100%);
+            border-color: #0984e3;
+            box-shadow: 0 0 20px rgba(9, 132, 227, 0.3);
+        }
+
+        @keyframes flash-room {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Specific Room Layouts */
+        .garage { grid-area: 1 / 1 / 2 / 2; }
+        .kitchen { grid-area: 1 / 2 / 2 / 3; }
+        .living-room { grid-area: 1 / 3 / 2 / 4; }
+        .foyer { grid-area: 2 / 1 / 3 / 2; }
+        .bathroom { grid-area: 2 / 2 / 3 / 3; }
+        .master-bedroom { grid-area: 2 / 3 / 4 / 4; }
+        .guest-bedroom { grid-area: 3 / 1 / 4 / 3; }
+
+        /* Side Panel */
+        .side-panel {
+            background: #2c3e50;
+            color: white;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .panel-section {
+            padding: 20px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Threat Level Meter - Compact */
+        .threat-meter {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .threat-level {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .threat-bar {
+            height: 12px;
+            background: #7f8c8d;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .threat-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .threat-safe { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .threat-warning { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .threat-critical { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+        /* AI Analysis Section */
+        .ai-analysis {
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+
+        .ai-analysis-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #3498db;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-analysis-content {
+            font-size: 13px;
+            color: #bdc3c7;
+            line-height: 1.4;
+        }
+
+        .ai-step {
+            margin: 5px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .ai-step:last-child {
+            border-bottom: none;
+        }
+
+        .ai-step-icon {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            margin-right: 8px;
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .activity-item {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item.critical { border-left-color: #e74c3c; }
+        .activity-item.warning { border-left-color: #f39c12; }
+        .activity-item.safe { border-left-color: #27ae60; }
+
+        .activity-time {
+            font-size: 14px;
+            color: #bdc3c7;
+            margin-bottom: 5px;
+        }
+
+        .activity-message {
+            font-size: 16px;
+            color: #ecf0f1;
+            font-weight: 500;
+        }
+
+        .activity-location {
+            font-size: 14px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        /* Device Details */
+        .device-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .device-card {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #4a5f7a;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .device-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ecf0f1;
+        }
+
+        .device-specs {
+            font-size: 13px;
+            color: #bdc3c7;
+            line-height: 1.4;
+        }
+
+        .signal-strength {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        .signal-bar {
+            width: 3px;
+            background: #7f8c8d;
+            border-radius: 1px;
+        }
+
+        .signal-bar.active { background: #27ae60; }
+        .signal-bar:nth-child(1) { height: 6px; }
+        .signal-bar:nth-child(2) { height: 9px; }
+        .signal-bar:nth-child(3) { height: 12px; }
+        .signal-bar:nth-child(4) { height: 15px; }
+
+        /* Intruder Animation */
+        .intruder-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #e74c3c;
+            border-radius: 50%;
+            z-index: 100;
+            opacity: 0;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+            animation: intruder-pulse 0.5s infinite;
+        }
+
+        @keyframes intruder-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        /* Notification Banner */
+        .notification-banner {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification-banner.show {
+            transform: translateX(0);
+        }
+
+        .notification-banner.critical {
+            background: #e74c3c;
+        }
+
+        .notification-banner.warning {
+            background: #f39c12;
+        }
+
+        .notification-banner.safe {
+            background: #27ae60;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .side-panel {
+                order: 3;
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Banner -->
+    <div id="notification-banner" class="notification-banner">
+        <div class="notification-title" id="notification-title">Device Update</div>
+        <div class="notification-message" id="notification-message">Smart bulb turned on</div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="heartbeat"></div>
+                <h1>🔒 SecureX AI Security</h1>
+            </div>
+            <div class="system-status">
+                <span>System Status:</span>
+                <div id="connection-status" class="connection-status disconnected">Disconnected</div>
+            </div>
+        </div>
+
+        <!-- Main House Layout -->
+        <div class="main-content">
+            <div class="house-container">
+                <h2 class="house-title">🏠 Home Security Layout</h2>
+                <div class="house-layout">
+                    <!-- Garage -->
+                    <div class="room garage normal" id="room-garage">
+                        <div class="room-name">GARAGE</div>
+                        <div class="room-icon">🚗</div>
+                        <div class="devices">
+                            <!-- No sensors in garage -->
+                        </div>
+                    </div>
+
+                    <!-- Kitchen -->
+                    <div class="room kitchen normal" id="room-kitchen">
+                        <div class="room-name">KITCHEN</div>
+                        <div class="room-icon">🍽️</div>
+                        <div class="devices">
+                            <!-- No sensors in kitchen -->
+                        </div>
+                    </div>
+
+                    <!-- Living Room -->
+                    <div class="room living-room normal" id="room-living-room">
+                        <div class="room-name">LIVING ROOM</div>
+                        <div class="room-icon">🛋️</div>
+                        <div class="devices">
+                            <div class="device" id="device-motion" data-device="motion">
+                                <div class="device-icon">👁️</div>
+                                <div class="device-label">MOTION</div>
+                                <div class="device-status status-online"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Foyer -->
+                    <div class="room foyer normal" id="room-foyer">
+                        <div class="room-name">FOYER</div>
+                        <div class="room-icon">🚪</div>
+                        <div class="devices">
+                            <div class="device" id="device-door-lock" data-device="door-lock">
+                                <div class="device-icon">🔒</div>
+                                <div class="device-label">DOOR</div>
+                                <div class="device-status status-online"></div>
+                            </div>
+                            <div class="device" id="device-siren" data-device="siren">
+                                <div class="device-icon">🔊</div>
+                                <div class="device-label">SIREN</div>
+                                <div class="device-status status-online"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bathroom -->
+                    <div class="room bathroom normal" id="room-bathroom">
+                        <div class="room-name">BATHROOM</div>
+                        <div class="room-icon">🚿</div>
+                        <div class="devices">
+                            <!-- No sensors in bathroom -->
+                        </div>
+                    </div>
+
+                    <!-- Master Bedroom -->
+                    <div class="room master-bedroom normal" id="room-master-bedroom">
+                        <div class="room-name">MASTER BEDROOM</div>
+                        <div class="room-icon">🛏️</div>
+                        <div class="devices">
+                            <div class="device" id="device-window" data-device="window">
+                                <div class="device-icon">🪟</div>
+                                <div class="device-label">WINDOW</div>
+                                <div class="device-status status-online"></div>
+                            </div>
+                            <div class="device" id="device-bulb" data-device="bulb">
+                                <div class="device-icon">💡</div>
+                                <div class="device-label">BULB</div>
+                                <div class="device-status status-online"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guest Bedroom -->
+                    <div class="room guest-bedroom normal" id="room-guest-bedroom">
+                        <div class="room-name">GUEST BEDROOM</div>
+                        <div class="room-icon">🛏️</div>
+                        <div class="devices">
+                            <!-- No sensors in guest bedroom -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="side-panel">
+            <!-- Threat Level -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    🎯 Threat Assessment
+                </div>
+                <div class="threat-meter">
+                    <div class="threat-level" id="threat-level">SAFE</div>
+                    <div class="threat-bar">
+                        <div class="threat-fill threat-safe" id="threat-fill" style="width: 10%;"></div>
+                    </div>
+                </div>
+                
+                <!-- AI Analysis Section -->
+                <div class="ai-analysis" id="ai-analysis">
+                    <div class="ai-analysis-title">
+                        🤖 AI Analysis
+                    </div>
+                    <div class="ai-analysis-content" id="ai-analysis-content">
+                        <div class="ai-step">
+                            <span class="ai-step-icon">🔍</span>
+                            System monitoring all sensors...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    📡 Live Activity Feed
+                </div>
+                <div class="activity-feed" id="activity-feed">
+                    <div class="activity-item safe">
+                        <div class="activity-time">System Online</div>
+                        <div class="activity-message">SecureX AI System Initialized</div>
+                        <div class="activity-location">All sensors operational</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Status -->
+            <div class="panel-section">
+                <div class="panel-title">
+                    🔧 Device Status
+                </div>
+                <div class="device-grid" id="device-status">
+                    <!-- Device cards will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO Client Library -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <!-- Audio Elements -->
+    <audio id="alert-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+    </audio>
+
+    <script>
+        // Socket.IO Client (compatible with Flask-SocketIO)
+        class SecurityWebSocket {
+            constructor(url) {
+                // Convert WebSocket URL to HTTP URL for Socket.IO
+                this.url = url.replace('ws://', 'http://').replace('wss://', 'https://');
+                this.socket = null;
+                this.messageCallback = null;
+                this.deviceUpdateCallback = null;
+                this.isIntentionallyClosed = false;
+            }
+
+            connect() {
+                try {
+                    console.log(`🔌 Connecting to ${this.url} via Socket.IO`);
+                    console.log('🔧 Debug: Initializing Socket.IO connection...');
+                    
+                    // Initialize Socket.IO connection
+                    this.socket = io(this.url, {
+                        transports: ['polling', 'websocket'],
+                        timeout: 10000,
+                        reconnection: true,
+                        reconnectionDelay: 2000,
+                        reconnectionDelayMax: 10000,
+                        reconnectionAttempts: 20,
+                        forceNew: true
+                    });
+                    
+                    console.log('🔧 Debug: Socket.IO instance created');
+
+                    // Connection successful
+                    this.socket.on('connect', () => {
+                        console.log('✅ Socket.IO connected');
+                        console.log('Socket ID:', this.socket.id);
+                        this.updateConnectionStatus(true);
+                        if (dashboard) {
+                            dashboard.addActivity('System Connected', 'Socket.IO connection established', 'Network', 'safe');
+                        }
+                    });
+
+                    // Listen for status updates from backend
+                    this.socket.on('status_update', (message) => {
+                        console.log('📨 Received status_update:', message);
+                        
+                        if (this.messageCallback) {
+                            this.messageCallback(message);
+                        }
+                    });
+
+                    // Listen for device updates from backend
+                    this.socket.on('device_update', (message) => {
+                        console.log('📨 Received device_update:', message);
+                        
+                        if (this.deviceUpdateCallback) {
+                            this.deviceUpdateCallback(message);
+                        }
+                    });
+
+                    // Connection acknowledgment
+                    this.socket.on('connected', (data) => {
+                        console.log('📨 Received connected acknowledgment:', data);
+                    });
+
+                    // Handle disconnection
+                    this.socket.on('disconnect', (reason) => {
+                        console.log('🔌 Socket.IO disconnected:', reason);
+                        this.updateConnectionStatus(false);
+                        if (dashboard) {
+                            dashboard.addActivity('System Disconnected', `Connection lost: ${reason}`, 'Network', 'critical');
+                        }
+                    });
+
+                    // Handle connection errors
+                    this.socket.on('connect_error', (error) => {
+                        console.error('❌ Socket.IO connection error:', error);
+                        console.error('🔧 Debug: Error details:', {
+                            message: error.message,
+                            type: error.type,
+                            description: error.description
+                        });
+                        this.updateConnectionStatus(false);
+                        if (dashboard) {
+                            dashboard.addActivity('Connection Error', `Failed to connect: ${error.message}`, 'Network', 'critical');
+                        }
+                    });
+
+                    // Handle reconnection attempts
+                    this.socket.on('reconnect_attempt', (attemptNumber) => {
+                        console.log(`🔄 Reconnection attempt ${attemptNumber}`);
+                        if (dashboard) {
+                            dashboard.addActivity('Reconnecting', `Attempt ${attemptNumber}`, 'Network', 'warning');
+                        }
+                    });
+
+                    // Handle successful reconnection
+                    this.socket.on('reconnect', (attemptNumber) => {
+                        console.log(`✅ Reconnected after ${attemptNumber} attempts`);
+                        this.updateConnectionStatus(true);
+                        if (dashboard) {
+                            dashboard.addActivity('Reconnected', `Successfully reconnected`, 'Network', 'safe');
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('❌ Connection error:', error);
+                    this.updateConnectionStatus(false);
+                    if (dashboard) {
+                        dashboard.addActivity('Connection Error', `Failed to initialize: ${error.message}`, 'Network', 'critical');
+                    }
+                }
+            }
+
+            onMessage(callback) {
+                this.messageCallback = callback;
+            }
+
+            onDeviceUpdate(callback) {
+                this.deviceUpdateCallback = callback;
+            }
+
+            disconnect() {
+                this.isIntentionallyClosed = true;
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                }
+            }
+
+            updateConnectionStatus(isConnected) {
+                const statusElement = document.getElementById('connection-status');
+                if (statusElement) {
+                    if (isConnected) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'connection-status connected';
+                    } else {
+                        statusElement.textContent = 'Disconnected';
+                        statusElement.className = 'connection-status disconnected';
+                    }
+                }
+            }
+
+
+        }
+
+        // Security Dashboard Controller
+        class SecurityDashboard {
+            constructor() {
+                this.currentThreatLevel = 'SAFE';
+                this.devices = {
+                    'motion': { name: 'Motion Sensor', location: 'Living Room', online: true, battery: 85, signal: 4 },
+                    'window': { name: 'Window Sensor', location: 'Master Bedroom', online: true, battery: 92, signal: 3 },
+                    'door-lock': { name: 'Door Lock', location: 'Foyer', online: true, battery: 78, signal: 4 },
+                    'bulb': { name: 'Smart Bulb', location: 'Master Bedroom', online: true, battery: 100, signal: 4 },
+                    'siren': { name: 'Siren', location: 'Foyer', online: true, battery: 88, signal: 3 }
+                };
+                this.intruderAnimation = null;
+                this.soundEnabled = true;
+                
+                this.initializeDeviceStatus();
+                this.setupEventListeners();
+            }
+
+            initializeDeviceStatus() {
+                const container = document.getElementById('device-status');
+                container.innerHTML = '';
+                
+                Object.entries(this.devices).forEach(([id, device]) => {
+                    const card = document.createElement('div');
+                    card.className = 'device-card';
+                    card.innerHTML = `
+                        <div class="device-header">
+                            <div class="device-name">${device.name}</div>
+                            <div class="signal-strength">
+                                ${Array.from({length: 4}, (_, i) => 
+                                    `<div class="signal-bar ${i < device.signal ? 'active' : ''}"></div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        <div class="device-specs">
+                            📍 ${device.location}<br>
+                            🔋 Battery: ${device.battery}%<br>
+                            📡 Signal: ${device.signal}/4 bars<br>
+                            ⏰ Last seen: Just now
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            setupEventListeners() {
+                // Device hover effects
+                document.querySelectorAll('.device').forEach(device => {
+                    device.addEventListener('click', (e) => {
+                        const deviceType = e.currentTarget.dataset.device;
+                        this.showDeviceDetails(deviceType);
+                    });
+                });
+            }
+
+            showDeviceDetails(deviceType) {
+                const device = this.devices[deviceType];
+                if (device) {
+                    this.addActivity(
+                        'Device Info',
+                        `${device.name} - Battery: ${device.battery}%, Signal: ${device.signal}/4`,
+                        device.location,
+                        'safe'
+                    );
+                }
+            }
+
+            updateThreatLevel(level, percentage) {
+                this.currentThreatLevel = level;
+                
+                const levelElement = document.getElementById('threat-level');
+                const fillElement = document.getElementById('threat-fill');
+                
+                levelElement.textContent = level;
+                fillElement.style.width = `${percentage}%`;
+                
+                // Update threat bar color
+                fillElement.className = 'threat-fill';
+                if (level === 'CRITICAL') {
+                    fillElement.classList.add('threat-critical');
+                } else if (level === 'WARNING') {
+                    fillElement.classList.add('threat-warning');
+                } else {
+                    fillElement.classList.add('threat-safe');
+                }
+            }
+
+            updateAIAnalysis(steps) {
+                const contentElement = document.getElementById('ai-analysis-content');
+                if (!contentElement) return;
+                
+                contentElement.innerHTML = '';
+                
+                steps.forEach((step, index) => {
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'ai-step';
+                    stepElement.innerHTML = `
+                        <span class="ai-step-icon">${step.icon}</span>
+                        ${step.message}
+                    `;
+                    contentElement.appendChild(stepElement);
+                    
+                    // Animate step appearance
+                    setTimeout(() => {
+                        stepElement.style.opacity = '0';
+                        stepElement.style.transform = 'translateX(-10px)';
+                        stepElement.style.transition = 'all 0.3s ease';
+                        setTimeout(() => {
+                            stepElement.style.opacity = '1';
+                            stepElement.style.transform = 'translateX(0)';
+                        }, 50);
+                    }, index * 200);
+                });
+            }
+
+            showAIProcessing(eventType, deviceName, location, deviceType, state) {
+                let steps = [];
+                
+                // Different AI analysis based on device type
+                switch(deviceType) {
+                    case 'bulb':
+                        if (state.switch_led === true) {
+                            steps = [
+                                { icon: '📡', message: `Smart bulb activated: ${deviceName}` },
+                                { icon: '💡', message: `Mode: ${state.work_mode || 'standard'}` },
+                                { icon: '🔆', message: `Brightness: ${state.bright_value || 'auto'}` },
+                                { icon: '🎨', message: state.colour_data ? 'Color mode detected' : 'White light mode' },
+                                { icon: '✅', message: 'Lighting system updated' }
+                            ];
+                        } else {
+                            steps = [
+                                { icon: '📡', message: `Smart bulb deactivated: ${deviceName}` },
+                                { icon: '💡', message: 'Turning off lighting' },
+                                { icon: '✅', message: 'Device powered down' }
+                            ];
+                        }
+                        break;
+                    
+                    case 'motion':
+                        if (state.pir_state === 'pir') {
+                            steps = [
+                                { icon: '📡', message: `Motion detected: ${deviceName}` },
+                                { icon: '👁️', message: 'PIR sensor triggered' },
+                                { icon: '🔍', message: 'Analyzing movement pattern...' },
+                                { icon: '⏰', message: 'Checking time context...' },
+                                { icon: '🧠', message: 'Evaluating threat level' }
+                            ];
+                        } else {
+                            steps = [
+                                { icon: '📡', message: `Motion sensor update: ${deviceName}` },
+                                { icon: '👁️', message: 'No motion detected' },
+                                { icon: '✅', message: 'Area clear' }
+                            ];
+                        }
+                        break;
+                    
+                    case 'door-lock':
+                        steps = [
+                            { icon: '📡', message: `Door lock event: ${deviceName}` },
+                            { icon: '🔒', message: 'Processing access attempt...' },
+                            { icon: '🔍', message: 'Verifying authorization...' },
+                            { icon: '✅', message: 'Access event logged' }
+                        ];
+                        break;
+                    
+                    case 'siren':
+                        if (state.alarm_switch === true) {
+                            steps = [
+                                { icon: '📡', message: `Siren activated: ${deviceName}` },
+                                { icon: '🔊', message: `Volume: ${state.alarm_volume || 'medium'}` },
+                                { icon: '🚨', message: 'Alert system engaged' }
+                            ];
+                        } else {
+                            steps = [
+                                { icon: '📡', message: `Siren deactivated: ${deviceName}` },
+                                { icon: '🔇', message: 'Alert system disarmed' }
+                            ];
+                        }
+                        break;
+                    
+                    case 'window':
+                        if (state.shock_state === 'vibration') {
+                            steps = [
+                                { icon: '📡', message: `Vibration detected: ${deviceName}` },
+                                { icon: '🪟', message: 'Window sensor triggered' },
+                                { icon: '🔍', message: 'Analyzing vibration pattern...' },
+                                { icon: '⚠️', message: 'Potential security event' }
+                            ];
+                        } else {
+                            steps = [
+                                { icon: '📡', message: `Window sensor update: ${deviceName}` },
+                                { icon: '🪟', message: 'Normal state detected' }
+                            ];
+                        }
+                        break;
+                    
+                    default:
+                        steps = [
+                            { icon: '📡', message: `Device update: ${deviceName}` },
+                            { icon: '🔍', message: 'Processing event...' },
+                            { icon: '✅', message: 'Update complete' }
+                        ];
+                }
+                
+                this.updateAIAnalysis(steps);
+                
+                // Show final summary after initial steps
+                setTimeout(() => {
+                    const finalSteps = [
+                        { icon: '✅', message: `Event processed: ${eventType}` },
+                        { icon: '📍', message: `Location: ${location}` },
+                        { icon: '🎯', message: `Threat level: ${this.currentThreatLevel}` }
+                    ];
+                    this.updateAIAnalysis(finalSteps);
+                }, 2000);
+            }
+
+            activateDevice(deviceId, duration = 3000) {
+                const device = document.getElementById(`device-${deviceId}`);
+                if (device) {
+                    const status = device.querySelector('.device-status');
+                    status.classList.remove('status-online');
+                    status.classList.add('status-active');
+                    
+                    setTimeout(() => {
+                        status.classList.remove('status-active');
+                        status.classList.add('status-online');
+                    }, duration);
+                }
+            }
+
+            setRoomState(roomId, state) {
+                const room = document.getElementById(`room-${roomId}`);
+                if (room) {
+                    room.className = `room ${roomId} ${state}`;
+                }
+            }
+
+            playSound(type) {
+                if (!this.soundEnabled) return;
+                
+                // Create audio context for different sounds
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Different sounds for different alerts
+                switch(type) {
+                    case 'critical':
+                        // Siren sound
+                        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 1);
+                        break;
+                    case 'warning':
+                        // Soft beep
+                        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.3);
+                        break;
+                    case 'safe':
+                        // Pleasant chime
+                        oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                        break;
+                }
+            }
+
+            animateIntruder(path) {
+                // Create intruder dot
+                const dot = document.createElement('div');
+                dot.className = 'intruder-dot';
+                document.querySelector('.house-layout').appendChild(dot);
+                
+                // Animate along path
+                let step = 0;
+                const animate = () => {
+                    if (step < path.length) {
+                        const room = document.getElementById(`room-${path[step]}`);
+                        if (room) {
+                            const rect = room.getBoundingClientRect();
+                            const containerRect = document.querySelector('.house-layout').getBoundingClientRect();
+                            
+                            dot.style.left = `${rect.left - containerRect.left + rect.width/2}px`;
+                            dot.style.top = `${rect.top - containerRect.top + rect.height/2}px`;
+                            dot.style.opacity = '1';
+                        }
+                        step++;
+                        setTimeout(animate, 1500); // Realistic timing
+                    } else {
+                        // Remove dot after animation
+                        setTimeout(() => {
+                            if (dot.parentNode) {
+                                dot.parentNode.removeChild(dot);
+                            }
+                        }, 2000);
+                    }
+                };
+                animate();
+            }
+
+            processDeviceUpdate(message) {
+                const { device_type, device_name, location, state, timestamp } = message;
+                
+                console.log(`🔧 Device update: ${device_name} in ${location}`, state);
+                
+                // Show AI processing for ALL device events
+                this.showAIProcessing('Device Event', device_name, location, device_type, state);
+                
+                // Update device visual state
+                this.updateDeviceState(device_type, state);
+                
+                // Add activity entry
+                const stateDescription = this.formatDeviceState(device_type, state);
+                this.addActivity(
+                    'Device Update',
+                    `${device_name}: ${stateDescription}`,
+                    location,
+                    'safe'
+                );
+                
+                // Show notification banner for important changes
+                if (device_type === 'door-lock' || device_type === 'bulb') {
+                    this.showNotificationBanner(
+                        'Device Update',
+                        `${device_name}: ${stateDescription}`,
+                        'safe'
+                    );
+                    this.playSound('safe');
+                }
+            }
+
+            updateDeviceState(deviceType, state) {
+                const deviceElement = document.getElementById(`device-${deviceType}`);
+                if (!deviceElement) return;
+                
+                const statusElement = deviceElement.querySelector('.device-status');
+                const iconElement = deviceElement.querySelector('.device-icon');
+                
+                // Update based on device type and state
+                switch(deviceType) {
+                    case 'bulb':
+                        if (state.switch_led === true || state.switch === true) {
+                            // Bulb is on
+                            iconElement.style.color = '#f39c12';
+                            statusElement.classList.remove('status-offline');
+                            statusElement.classList.add('status-active');
+                            deviceElement.style.backgroundColor = '#fff3cd';
+                        } else {
+                            // Bulb is off
+                            iconElement.style.color = '#7f8c8d';
+                            statusElement.classList.remove('status-active');
+                            statusElement.classList.add('status-online');
+                            deviceElement.style.backgroundColor = '#ecf0f1';
+                        }
+                        break;
+                    case 'door-lock':
+                        if (state.lock === true || state.locked === true) {
+                            iconElement.textContent = '🔒';
+                            statusElement.classList.add('status-online');
+                        } else {
+                            iconElement.textContent = '🔓';
+                            statusElement.classList.add('status-active');
+                        }
+                        break;
+                    case 'motion':
+                        if (state.pir === 'pir' || state.motion === true) {
+                            this.activateDevice('motion', 3000);
+                        }
+                        break;
+                    case 'window':
+                        if (state.doorcontact_state === false || state.contact === false) {
+                            this.activateDevice('window', 3000);
+                        }
+                        break;
+                    case 'siren':
+                        if (state.alarm_switch === true || state.siren === true) {
+                            this.activateDevice('siren', 5000);
+                        }
+                        break;
+                }
+                
+                // Animate the device to show it updated
+                this.animateDeviceUpdate(deviceType);
+            }
+
+            formatDeviceState(deviceType, state) {
+                switch(deviceType) {
+                    case 'bulb':
+                        if (state.switch_led === false) return 'Turned OFF';
+                        if (state.work_mode === 'colour') return `Color mode (${state.bright_value || 'auto'} brightness)`;
+                        if (state.work_mode === 'white') return `White mode (${state.bright_value || 'auto'} brightness)`;
+                        if (state.work_mode === 'scene') return `Scene mode: ${state.scene_data || 'default'}`;
+                        return 'Turned ON';
+                    
+                    case 'door-lock':
+                        if (state.unlock_fingerprint > 0) return `Unlocked via fingerprint #${state.unlock_fingerprint}`;
+                        if (state.unlock_password > 0) return `Unlocked via password #${state.unlock_password}`;
+                        if (state.unlock_card > 0) return `Unlocked via card #${state.unlock_card}`;
+                        if (state.unlock_app > 0) return 'Unlocked via mobile app';
+                        if (state.unlock_request > 0) return `Remote unlock requested (${state.unlock_request}s)`;
+                        if (state.alarm_lock && state.alarm_lock !== 'wrong_finger') return `Security alert: ${state.alarm_lock}`;
+                        return 'Status updated';
+                    
+                    case 'motion':
+                        if (state.pir_state === 'pir') return 'Motion detected!';
+                        if (state.pir_sensitivity) return `Sensitivity changed to ${state.pir_sensitivity}`;
+                        if (state.pir_delay) return `Detection delay set to ${state.pir_delay}s`;
+                        return 'No motion';
+                    
+                    case 'window':
+                        if (state.shock_state === 'vibration') return 'Vibration detected!';
+                        if (state.shock_state === 'drop') return 'Drop/impact detected!';
+                        if (state.sensitivity) return `Sensitivity adjusted to ${state.sensitivity}%`;
+                        return 'Normal state';
+                    
+                    case 'siren':
+                        if (state.alarm_switch === true) {
+                            const volume = state.alarm_volume || 'medium';
+                            const alarmType = state.alarm_state === '1' ? 'Sound only' : 
+                                            state.alarm_state === '2' ? 'Light only' : 'Sound + Light';
+                            return `Activated (${alarmType}, ${volume} volume)`;
+                        }
+                        return 'Deactivated';
+                    
+                    default:
+                        return 'State changed';
+                }
+            }
+
+            animateDeviceUpdate(deviceType) {
+                const deviceElement = document.getElementById(`device-${deviceType}`);
+                if (!deviceElement) return;
+                
+                // Add pulse animation
+                deviceElement.style.transform = 'scale(1.1)';
+                deviceElement.style.boxShadow = '0 0 15px rgba(52, 152, 219, 0.6)';
+                
+                setTimeout(() => {
+                    deviceElement.style.transform = 'scale(1)';
+                    deviceElement.style.boxShadow = 'none';
+                }, 2000);
+            }
+
+            showNotificationBanner(title, message, type) {
+                const banner = document.getElementById('notification-banner');
+                const titleElement = document.getElementById('notification-title');
+                const messageElement = document.getElementById('notification-message');
+                
+                // Update content
+                titleElement.textContent = title;
+                messageElement.textContent = message;
+                
+                // Update style
+                banner.className = `notification-banner ${type}`;
+                
+                // Show banner
+                setTimeout(() => {
+                    banner.classList.add('show');
+                }, 100);
+                
+                // Hide after 4 seconds
+                setTimeout(() => {
+                    banner.classList.remove('show');
+                }, 4000);
+            }
+
+            addActivity(title, message, location, type) {
+                const feed = document.getElementById('activity-feed');
+                const item = document.createElement('div');
+                item.className = `activity-item ${type}`;
+                
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                
+                item.innerHTML = `
+                    <div class="activity-time">${timeStr}</div>
+                    <div class="activity-message">${message}</div>
+                    <div class="activity-location">📍 ${location}</div>
+                `;
+                
+                feed.insertBefore(item, feed.firstChild);
+                
+                // Keep only last 10 items
+                while (feed.children.length > 10) {
+                    feed.removeChild(feed.lastChild);
+                }
+            }
+
+            processSecurityEvent(message) {
+                const { status, zone } = message;
+                
+                // Reset all rooms first
+                document.querySelectorAll('.room').forEach(room => {
+                    const roomId = room.id.replace('room-', '');
+                    this.setRoomState(roomId, 'normal');
+                });
+                
+                switch(status) {
+                    case 'RED_CRITICAL':
+                        // Show detailed AI analysis for critical threat
+                        const criticalSteps = [
+                            { icon: '🚨', message: 'CRITICAL THREAT DETECTED' },
+                            { icon: '🔍', message: 'Motion + Vibration pattern identified' },
+                            { icon: '⏰', message: 'Time weighting applied (nighttime +50%)' },
+                            { icon: '📊', message: 'Threat score: 95/100 (CRITICAL)' },
+                            { icon: '🛡️', message: 'Activating security protocols...' },
+                            { icon: '💡', message: 'Bulb → Red strobe mode' },
+                            { icon: '🔊', message: 'Siren → Activated' },
+                            { icon: '🔒', message: 'Door → Auto-locked' }
+                        ];
+                        this.updateAIAnalysis(criticalSteps);
+                        
+                        this.updateThreatLevel('CRITICAL', 95);
+                        this.playSound('critical');
+                        
+                        // Flash all rooms
+                        document.querySelectorAll('.room').forEach(room => {
+                            const roomId = room.id.replace('room-', '');
+                            this.setRoomState(roomId, 'critical');
+                        });
+                        
+                        // Activate devices
+                        this.activateDevice('bulb', 5000);
+                        this.activateDevice('siren', 5000);
+                        this.activateDevice('door-lock', 2000);
+                        
+                        // Show intruder path
+                        this.animateIntruder(['living-room', 'master-bedroom']);
+                        
+                        this.addActivity(
+                            'CRITICAL ALERT',
+                            'Break-in attempt detected! Motion + Window vibration',
+                            'Living Room → Master Bedroom',
+                            'critical'
+                        );
+                        break;
+                        
+                    case 'YELLOW_WARNING':
+                        // Show AI analysis for warning
+                        const warningSteps = [
+                            { icon: '⚠️', message: 'Potential threat detected' },
+                            { icon: '👁️', message: 'Motion sensor triggered' },
+                            { icon: '⏱️', message: 'Waiting for follow-up events...' },
+                            { icon: '📊', message: 'Threat score: 60/100 (WARNING)' },
+                            { icon: '💡', message: 'Soft lighting activated' }
+                        ];
+                        this.updateAIAnalysis(warningSteps);
+                        
+                        this.updateThreatLevel('WARNING', 60);
+                        this.playSound('warning');
+                        
+                        if (zone === 'LivingRoom') {
+                            this.setRoomState('living-room', 'warning');
+                            this.activateDevice('motion', 3000);
+                        }
+                        
+                        this.addActivity(
+                            'WARNING',
+                            'Motion detected - monitoring situation',
+                            zone || 'Living Room',
+                            'warning'
+                        );
+                        break;
+                        
+                    case 'GREEN_SAFE':
+                        // Show AI analysis for safe state
+                        const safeSteps = [
+                            { icon: '✅', message: 'Authorized access detected' },
+                            { icon: '🔓', message: 'Door unlocked via app' },
+                            { icon: '🏠', message: 'Welcome home protocol' },
+                            { icon: '💡', message: 'Warm lighting activated' },
+                            { icon: '🛡️', message: 'All systems secure' }
+                        ];
+                        this.updateAIAnalysis(safeSteps);
+                        
+                        this.updateThreatLevel('SAFE', 15);
+                        this.playSound('safe');
+                        
+                        // Set all rooms to safe state
+                        document.querySelectorAll('.room').forEach(room => {
+                            const roomId = room.id.replace('room-', '');
+                            this.setRoomState(roomId, 'safe');
+                        });
+                        
+                        this.activateDevice('door-lock', 2000);
+                        this.activateDevice('bulb', 3000);
+                        
+                        this.addActivity(
+                            'SAFE',
+                            'Authorized entry detected - welcome home!',
+                            'Foyer',
+                            'safe'
+                        );
+                        
+                        // Return to normal after 5 seconds
+                        setTimeout(() => {
+                            document.querySelectorAll('.room').forEach(room => {
+                                const roomId = room.id.replace('room-', '');
+                                this.setRoomState(roomId, 'normal');
+                            });
+                            this.updateThreatLevel('SAFE', 10);
+                            
+                            // Show monitoring state
+                            const monitoringSteps = [
+                                { icon: '🔍', message: 'System monitoring all sensors...' },
+                                { icon: '📡', message: 'All devices online' },
+                                { icon: '🛡️', message: 'Ready to detect threats' }
+                            ];
+                            this.updateAIAnalysis(monitoringSteps);
+                        }, 5000);
+                        break;
+                }
+            }
+
+            addActivity(title, message, location, type) {
+                const feed = document.getElementById('activity-feed');
+                const item = document.createElement('div');
+                item.className = `activity-item ${type}`;
+                
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                
+                item.innerHTML = `
+                    <div class="activity-time">${timeStr}</div>
+                    <div class="activity-message">${message}</div>
+                    <div class="activity-location">📍 ${location}</div>
+                `;
+                
+                feed.insertBefore(item, feed.firstChild);
+                
+                // Keep only last 10 items
+                while (feed.children.length > 10) {
+                    feed.removeChild(feed.lastChild);
+                }
+            }
+        }
+
+        // Initialize Application
+        let wsClient = null;
+        let dashboard = null;
+
+        function initializeApp() {
+            console.log('🚀 Initializing SecureX Security Dashboard...');
+            
+            // Initialize dashboard
+            dashboard = new SecurityDashboard();
+            
+            // Initialize WebSocket
+            wsClient = new SecurityWebSocket('http://localhost:5000');
+            wsClient.onMessage((message) => {
+                console.log('🔒 Processing security event:', message);
+                
+                // Handle different message formats
+                if (message.status && message.zone) {
+                    dashboard.processSecurityEvent(message);
+                } else if (message.status_update) {
+                    dashboard.processSecurityEvent(message.status_update);
+                }
+            });
+            
+            wsClient.onDeviceUpdate((message) => {
+                console.log('🔧 Processing device update:', message);
+                dashboard.processDeviceUpdate(message);
+            });
+            
+            wsClient.connect();
+            
+            console.log('✅ SecureX Dashboard initialized successfully');
+        }
+
+        // Keyboard shortcuts for demo
+        document.addEventListener('keydown', (event) => {
+            switch(event.key) {
+                case '1':
+                    console.log('🎮 Demo: YELLOW_WARNING');
+                    dashboard?.processSecurityEvent({status: 'YELLOW_WARNING', zone: 'LivingRoom'});
+                    break;
+                case '2':
+                    console.log('🎮 Demo: RED_CRITICAL');
+                    dashboard?.processSecurityEvent({status: 'RED_CRITICAL', zone: 'HOUSE'});
+                    break;
+                case '3':
+                    console.log('🎮 Demo: GREEN_SAFE');
+                    dashboard?.processSecurityEvent({status: 'GREEN_SAFE', zone: 'HOUSE'});
+                    break;
+                case 'm':
+                    dashboard.soundEnabled = !dashboard.soundEnabled;
+                    console.log(`🔊 Sound ${dashboard.soundEnabled ? 'enabled' : 'disabled'}`);
+                    break;
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (wsClient) {
+                wsClient.isIntentionallyClosed = true;
+                wsClient.disconnect();
+            }
+        });
+
+        console.log('🎮 Demo Controls: 1=Warning, 2=Critical, 3=Safe, M=Mute');
+    </script>
+</body>
+</html>
