@@ -15,7 +15,7 @@
 # Configuration files with sensitive data
 backend/config.py
 config.py
-.kiro/
+
 # ===========================
 # Python
 # ===========================
@@ -207,12 +207,6 @@ tramp
 .\#*
 
 # ===========================
-# Kiro IDE
-# ===========================
-
-# Kiro IDE configuration and specs
-.kiro/
-
 # ===========================
 # Operating System
 # ===========================
