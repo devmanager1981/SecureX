@@ -1,6 +1,20 @@
-# Tuya Security Digital Twin
+# SecureX - AI Security Dashboard
 
-An AI-powered IoT security system that integrates Tuya smart home devices with real-time threat analysis and 3D visualization.
+An AI-powered IoT security monitoring system that provides real-time threat detection and automated response capabilities for Tuya-connected devices.
+
+## 🌍 **Development Context & Limitations**
+
+**Location**: Developed in India  
+**Hardware Limitation**: Due to shipping restrictions and delivery limitations to India, this project is developed as a **software-first, cloud-native solution** using virtual Tuya devices for demonstration and development purposes.
+
+**Hackathon Alignment**: While the Tuya AI Innovators Hackathon 2025 emphasizes physical T5 hardware integration, this project showcases the **AI Agent Application** track focusing on intelligent software solutions that can be deployed to any Tuya-compatible hardware ecosystem once physical devices become available.
+
+**Virtual Device Approach**: The system uses Tuya Cloud API with virtual device simulation to demonstrate full AI-powered security monitoring capabilities. This approach allows for:
+- Complete system architecture validation
+- AI algorithm development and testing  
+- Real-time dashboard functionality
+- Scalable cloud-native deployment
+- Easy migration to physical hardware when available
 
 ## Overview
 

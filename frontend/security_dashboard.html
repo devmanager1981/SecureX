@@ -1551,28 +1551,6 @@
             console.log('✅ SecureX Dashboard initialized successfully');
         }
 
-        // Keyboard shortcuts for demo
-        document.addEventListener('keydown', (event) => {
-            switch(event.key) {
-                case '1':
-                    console.log('🎮 Demo: YELLOW_WARNING');
-                    dashboard?.processSecurityEvent({status: 'YELLOW_WARNING', zone: 'LivingRoom'});
-                    break;
-                case '2':
-                    console.log('🎮 Demo: RED_CRITICAL');
-                    dashboard?.processSecurityEvent({status: 'RED_CRITICAL', zone: 'HOUSE'});
-                    break;
-                case '3':
-                    console.log('🎮 Demo: GREEN_SAFE');
-                    dashboard?.processSecurityEvent({status: 'GREEN_SAFE', zone: 'HOUSE'});
-                    break;
-                case 'm':
-                    dashboard.soundEnabled = !dashboard.soundEnabled;
-                    console.log(`🔊 Sound ${dashboard.soundEnabled ? 'enabled' : 'disabled'}`);
-                    break;
-            }
-        });
-
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', initializeApp);
 
@@ -1583,8 +1561,6 @@
                 wsClient.disconnect();
             }
         });
-
-        console.log('🎮 Demo Controls: 1=Warning, 2=Critical, 3=Safe, M=Mute');
     </script>
 </body>
 </html>
