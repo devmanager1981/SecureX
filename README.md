@@ -69,111 +69,15 @@
 5. **Scalable Cloud Architecture**: Designed for enterprise deployment
 6. **Hardware Independence**: Virtual device simulation for global accessibility
 
-### **System Architecture Diagram**
 
-```mermaid
-graph TB
-    subgraph "Tuya Cloud Ecosystem"
-        TD[Tuya Devices<br/>Virtual Simulation]
-        TC[Tuya Cloud API<br/>WebSocket + REST]
-    end
-    
-    subgraph "SecureX Backend (Python)"
-        TCM[Tuya Connection Manager<br/>Device Communication]
-        TAE[AI Threat Analyzer<br/>Pattern Recognition]
-        RO[Response Orchestrator<br/>Automated Actions]
-        WS[WebSocket Server<br/>Real-time Broadcasting]
-    end
-    
-    subgraph "SecureX Frontend"
-        SD[Security Dashboard<br/>Interactive Visualization]
-        AI[AI Analysis Panel<br/>Step-by-step Processing]
-        AF[Activity Feed<br/>Real-time Events]
-    end
-    
-    subgraph "AI Intelligence Layer"
-        ML[Machine Learning<br/>Threat Detection]
-        TC[Time-Contextual<br/>Scoring Engine]
-        PR[Pattern Recognition<br/>Event Correlation]
-    end
-    
-    TD --> TC
-    TC --> TCM
-    TCM --> TAE
-    TAE --> ML
-    TAE --> TC
-    TAE --> PR
-    TAE --> RO
-    RO --> WS
-    WS --> SD
-    WS --> AI
-    WS --> AF
-    
-    style TD fill:#e1f5fe
-    style TAE fill:#f3e5f5
-    style ML fill:#fff3e0
-    style SD fill:#e8f5e8
-```
-
-### **Hardware Connection Diagram (Virtual Implementation)**
-
-```mermaid
-graph LR
-    subgraph "Physical Hardware (Target Deployment)"
-        T5[Tuya T5 Dev Board<br/>🚫 Not Available in India]
-        MS[Motion Sensor<br/>PIR Detection]
-        VS[Vibration Sensor<br/>Window/Door Monitoring]
-        SB[Smart Bulb<br/>RGB + White Light]
-        SR[Smart Siren<br/>Audio Alerts]
-        DL[Door Lock<br/>Access Control]
-    end
-    
-    subgraph "Virtual Simulation (Current)"
-        VT5[Virtual T5 Board<br/>Tuya Cloud API]
-        VMS[Virtual Motion Sensor<br/>ID: vdevo176449224066131]
-        VVS[Virtual Vibration Sensor<br/>ID: vdevo176449226291392]
-        VSB[Virtual Smart Bulb<br/>ID: vdevo17644921840
-     VSR[Virtual Siren<b Lock<br/>ID: vdevo176449220885548]
-    end
-    
-    subgraph "SecureX System"
-        API[Tuya Cloud API<br/>Device Communication]
-        AI[AI Threat Engine<br/>Pattern Analysis]
-        DASH[Security Dashboard<br/>Real-time Visualization]
-    end
-    
-    VT5 --> API
-    VMS --> API
-  r/>ID --> API
-    VSB --> API
-    VSR --> API
-    VDL --> API
-    
-    API --> AI
-    AI --> DASH
-    
-    T5 -.->|Future Migration| VT5
-    MS -.->|Future Migration| VMS
-    VS -.->|Future Migration| VVS
-    SB -.->|Future Migratio: oVSB
-    SR -.->|F1764492286ation|8589
-    DL -.->|Fut4]ion| V
-    
-    style T5 fill:#ff    VDL[Virt
-**Loctyle VT5 fill:#c8e6c9
-   ation**:I fill:#fff3e0
-```
-
----
-
-## 🔧 **Hard Dre List**
+## 🔧 **HardWare List**
 
 ### **Target Hardware (Physical Deployment)**
 *Note: Not available in India due to shipping restrictions*
 
 | Component | Model | Purpose | Status |
 |-----------|-------|---------|---------|
-| **Development Board** | Tuya T5 AI-CORE Kit | Main processing unit, local AI | ❌ Neveloped in  in India |
+| **Development Board** | Tuya T5 AI-CORE Kit | Main processing unit, local AI | ❌ Physical hardware unavailable |
 | **Motion Sensor** | Tuya PIR Motion Detector | Living room movement detection | ❌ Physical hardware unavailable |
 | **Vibration Sensor** | Tuya Window/Door Sensor | Window vibration detection | ❌ Physical hardware unavailable |
 | **Smart Bulb** | Tuya RGB SmartIndia  isual alerts and notifications | ❌ Physical hardware unavailable |
@@ -199,7 +103,7 @@ graph LR
 | **Development Platform** | Windows 11, Python 3.11+ | Backend development |
 | **Cloud Integration** | Tuya IoT Cloud Platform | Device communication |
 | **AI Framework** | scikit-learn, custom algorithms | Threat detection |
-| **Fronchnology**L5, CSS3, JavaScript ES6+ | Interactive dashboard |
+| **Frontend HTML5, CSS3, JavaScript ES6+ | Interactive dashboard |
 | **Real-time Communication** | WebSocket (Socket.IO) | Live updates |
 
 ---
